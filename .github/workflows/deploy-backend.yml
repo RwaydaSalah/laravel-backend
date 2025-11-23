@@ -1,0 +1,44 @@
+name: backend CI/CD via SSM
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build step
+        run: |
+          echo "Building backtend..."
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::356630932809:role/DevOps-Infra
+          aws-region: us-east-1
+
+      - name: Deploy to EC2 via SSM
+        run: |
+        
+
+          aws ssm send-command \
+            --instance-ids i-0601158e09fb44530 \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy laravel backend" \
+            --parameters commands='[
+              "mkdir -p /var/www/backend",
+              "cd /var/www/backend",
+              "git clone https://github.com/RwaydaSalah/laravel-backend.git .",
+              "php artisan migrate"       
+            ]' \
+            --output text
